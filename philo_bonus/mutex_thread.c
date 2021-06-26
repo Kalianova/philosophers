@@ -1,6 +1,6 @@
 #include "philo.h"
 
-static void	custom_sleep(unsigned long long wake)
+void	custom_sleep(unsigned long long wake)
 {
 	while (get_time(0) < wake)
 		usleep(50);
