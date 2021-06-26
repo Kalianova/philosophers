@@ -50,8 +50,6 @@ static void	*monitor_thread(void *arg_philo)
 	philo = (t_philo *)arg_philo;
 	while (1)
 	{
-		if (philo->count_eat == philo->info_philo->num_philo_eat)
-			philo->all_philo->count_full_eat++;
 		if (!philo->eating && (int)(get_time(0) - philo->last_eat)
 			> philo->info_philo->time_die)
 		{
@@ -79,6 +77,8 @@ void	*philo_thread(void *arg_philo)
 	while (1)
 	{
 		eat_lock(philo);
+		if (philo->count_eat == philo->info_philo->num_philo_eat)
+			philo->all_philo->count_full_eat++;
 		print_info(philo, SLEEP);
 		custom_sleep(get_time(0) + philo->info_philo->time_sleep);
 		print_info(philo, THINK);

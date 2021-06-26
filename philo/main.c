@@ -21,35 +21,33 @@ void	print_info(t_philo *philo, int type)
 	pthread_mutex_unlock(&philo->all_philo->write);
 }
 
-static t_all_philo	init_all(t_info_philo *info)
+static void	init_all(t_info_philo *info, t_all_philo *res)
 {
-	t_all_philo	res;
 	int			i;
 
 	i = -1;
-	res.smbd_dead = 0;
-	res.philos = (t_philo *)malloc(sizeof(t_philo) * info->num_philo);
-	res.forks = (pthread_mutex_t *)
+	res->philos = (t_philo *)malloc(sizeof(t_philo) * info->num_philo);
+	res->forks = (pthread_mutex_t *)
 		malloc(sizeof(pthread_mutex_t) * info->num_philo);
-	res.begin = get_time(0);
-	pthread_mutex_init(&res.take_fork, NULL);
-	pthread_mutex_init(&res.write, NULL);
+	res->begin = get_time(0);
+	res->count_full_eat = 0;
+	pthread_mutex_init(&res->take_fork, NULL);
+	pthread_mutex_init(&res->write, NULL);
 	while (++i < info->num_philo)
 	{
-		res.philos[i].num_id = i;
-		res.philos[i].eating = 0;
-		res.philos[i].right_fork = (i + 1) % info->num_philo;
-		res.philos[i].left_fork = i;
-		res.philos[i].all_philo = &res;
-		res.philos[i].info_philo = info;
-		res.philos[i].count_eat = 0;
-		res.philos[i].last_eat = get_time(0);
-		pthread_mutex_init(&res.forks[i], NULL);
-		pthread_create(&res.philos[i].thread,
-			NULL, philo_thread, &res.philos[i]);
+		res->philos[i].num_id = i;
+		res->philos[i].eating = 0;
+		res->philos[i].right_fork = (i + 1) % info->num_philo;
+		res->philos[i].left_fork = i;
+		res->philos[i].all_philo = res;
+		res->philos[i].info_philo = info;
+		res->philos[i].count_eat = 0;
+		res->philos[i].last_eat = get_time(0);
+		pthread_mutex_init(&res->forks[i], NULL);
+		pthread_create(&res->philos[i].thread,
+			NULL, philo_thread, &res->philos[i]);
 	}
-	pthread_create(&res.check_dead, NULL, monitor_dead_thread, &res);
-	return (res);
+	pthread_create(&res->check_dead, NULL, monitor_dead_thread, res);
 }
 
 static t_info_philo	init_info(int argc, char **argv)
@@ -78,7 +76,8 @@ int	main(int argc, char **argv)
 	if (info.num_philo <= 0 || info.num_philo_eat == 0 || info.time_die < 0
 		|| info.time_sleep < 0 || info.time_die < 0)
 		return (print_error("Invalid parameter"));
-	all = init_all(&info);
+	init_all(&info, &all);
+	all.smbd_dead = 0;
 	pthread_join(all.check_dead, NULL);
 	i = 0;
 	while (i < info.num_philo)
