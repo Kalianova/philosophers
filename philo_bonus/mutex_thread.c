@@ -1,6 +1,6 @@
 #include "philo.h"
 
-void	custom_sleep(unsigned long long wake)
+static void	custom_sleep(unsigned long long wake)
 {
 	while (get_time(0) < wake)
 		usleep(50);
@@ -8,10 +8,10 @@ void	custom_sleep(unsigned long long wake)
 
 static void	eat_lock(t_philo *philo)
 {
-	pthread_mutex_lock(&(philo->all_philo->take_fork));
-	pthread_mutex_lock(&(philo->all_philo->forks[philo->right_fork]));
-	pthread_mutex_lock(&(philo->all_philo->forks[philo->left_fork]));
-	pthread_mutex_unlock(&(philo->all_philo->take_fork));
+	sem_wait(&(philo->all_philo->take_fork));
+	sem_wait(&(philo->all_philo->forks));
+	sem_wait(&(philo->all_philo->forks));
+	sem_wait(&(philo->all_philo->take_fork));
 	fflush(stdout);
 	print_info(philo, FORK);
 	print_info(philo, FORK);
@@ -20,9 +20,15 @@ static void	eat_lock(t_philo *philo)
 	custom_sleep(get_time(0) + philo->info_philo->time_eat);
 	philo->last_eat = get_time(0);
 	philo->count_eat++;
+	if (philo->count_eat == philo->info_philo->num_philo_eat)
+	{
+		philo->all_philo->count_full_eat++;
+		if (philo->all_philo->count_full_eat == philo->info_philo->num_philo)
+			sem_wait(&philo->all_philo->write);
+	}
 	philo->eating = 0;
-	pthread_mutex_unlock(&(philo->all_philo->forks[philo->right_fork]));
-	pthread_mutex_unlock(&(philo->all_philo->forks[philo->left_fork]));
+	sem_post(&(philo->all_philo->forks));
+	sem_post(&(philo->all_philo->forks));
 }
 
 void	*monitor_dead_thread(void *arg_all)
@@ -36,10 +42,9 @@ void	*monitor_dead_thread(void *arg_all)
 			== all_philo->philos[0].info_philo->num_philo
 			|| all_philo->smbd_dead)
 		{
-			//clear all threads
 			return (NULL);
 		}
-		usleep(500);
+		custom_sleep(get_time(0) + 1000);
 	}
 }
 
@@ -50,19 +55,17 @@ static void	*monitor_thread(void *arg_philo)
 	philo = (t_philo *)arg_philo;
 	while (1)
 	{
-		if (philo->count_eat == philo->info_philo->num_philo_eat)
-			philo->all_philo->count_full_eat++;
 		if (!philo->eating && (int)(get_time(0) - philo->last_eat)
 			> philo->info_philo->time_die)
 		{
 			philo->all_philo->smbd_dead = 1;
-			pthread_mutex_lock(&philo->all_philo->write);
+			sem_wait(&philo->all_philo->write);
 			printf("%llums %u died\n",
 				get_time(philo->all_philo->begin), philo->num_id);
 			fflush(stdout);
 			return (NULL);
 		}
-		usleep(1000);
+		custom_sleep(get_time(0) + 1000);
 	}
 }
 

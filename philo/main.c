@@ -69,7 +69,7 @@ int	main(int argc, char **argv)
 	t_info_philo	info;
 	t_all_philo		all;
 	int				i;
-
+// ОБРАБОТКА ОШИБОК МЬЮТЕКСОВ
 	if (argc < 5 || argc > 6)
 		return (print_error("Wrong number of parameters"));
 	info = init_info(argc, argv);

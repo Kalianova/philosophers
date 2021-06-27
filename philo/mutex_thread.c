@@ -9,8 +9,8 @@ static void	custom_sleep(unsigned long long wake)
 static void	eat_lock(t_philo *philo)
 {
 	pthread_mutex_lock(&(philo->all_philo->take_fork));
-	pthread_mutex_lock(&(philo->all_philo->forks[philo->right_fork]));
-	pthread_mutex_lock(&(philo->all_philo->forks[philo->left_fork]));
+	sem_wait();
+	sem_wait();
 	pthread_mutex_unlock(&(philo->all_philo->take_fork));
 	fflush(stdout);
 	print_info(philo, FORK);
@@ -20,9 +20,15 @@ static void	eat_lock(t_philo *philo)
 	custom_sleep(get_time(0) + philo->info_philo->time_eat);
 	philo->last_eat = get_time(0);
 	philo->count_eat++;
+	if (philo->count_eat == philo->info_philo->num_philo_eat)
+	{
+		philo->all_philo->count_full_eat++;
+		if (philo->all_philo->count_full_eat == philo->info_philo->num_philo)
+			pthread_mutex_lock(&philo->all_philo->write);
+	}
 	philo->eating = 0;
-	pthread_mutex_unlock(&(philo->all_philo->forks[philo->right_fork]));
-	pthread_mutex_unlock(&(philo->all_philo->forks[philo->left_fork]));
+	sem_post();
+	sem_post();
 }
 
 void	*monitor_dead_thread(void *arg_all)
@@ -36,10 +42,9 @@ void	*monitor_dead_thread(void *arg_all)
 			== all_philo->philos[0].info_philo->num_philo
 			|| all_philo->smbd_dead)
 		{
-			//clear all threads
 			return (NULL);
 		}
-		usleep(500);
+		custom_sleep(get_time(0) + 1000);
 	}
 }
 
@@ -60,7 +65,7 @@ static void	*monitor_thread(void *arg_philo)
 			fflush(stdout);
 			return (NULL);
 		}
-		usleep(1000);
+		custom_sleep(get_time(0) + 1000);
 	}
 }
 
@@ -77,8 +82,6 @@ void	*philo_thread(void *arg_philo)
 	while (1)
 	{
 		eat_lock(philo);
-		if (philo->count_eat == philo->info_philo->num_philo_eat)
-			philo->all_philo->count_full_eat++;
 		print_info(philo, SLEEP);
 		custom_sleep(get_time(0) + philo->info_philo->time_sleep);
 		print_info(philo, THINK);
