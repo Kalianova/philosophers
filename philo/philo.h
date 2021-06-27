@@ -21,7 +21,7 @@ typedef struct s_philo
 	int						num_id;
 	int						count_eat;
 	unsigned long long		last_eat;
-	pid_t					pid;
+	pthread_t				thread;
 	struct s_all_philo		*all_philo;
 	struct s_info_philo		*info_philo;		
 }				t_philo;
@@ -40,10 +40,10 @@ typedef struct s_all_philo
 	int					smbd_dead;
 	int					count_full_eat;
 	unsigned long long	begin;
-	sem_t				*forks;
-	sem_t				*write;
-	sem_t				*take_fork;
-	sem_t				*check_dead;
+	pthread_mutex_t		*forks;
+	pthread_mutex_t		write;
+	pthread_mutex_t		take_fork;
+	pthread_t			check_dead;
 	t_philo				*philos;
 }				t_all_philo;
 

@@ -46,6 +46,7 @@ static void	init_all(t_info_philo *info, t_all_philo *res)
 		pthread_mutex_init(&res->forks[i], NULL);
 		pthread_create(&res->philos[i].thread,
 			NULL, philo_thread, &res->philos[i]);
+		//pthread_detach(res->philos[i].thread);
 	}
 	pthread_create(&res->check_dead, NULL, monitor_dead_thread, res);
 }

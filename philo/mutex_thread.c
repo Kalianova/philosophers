@@ -9,8 +9,8 @@ static void	custom_sleep(unsigned long long wake)
 static void	eat_lock(t_philo *philo)
 {
 	pthread_mutex_lock(&(philo->all_philo->take_fork));
-	sem_wait();
-	sem_wait();
+	pthread_mutex_lock(&(philo->all_philo->forks[philo->right_fork]));
+	pthread_mutex_lock(&(philo->all_philo->forks[philo->left_fork]));
 	pthread_mutex_unlock(&(philo->all_philo->take_fork));
 	fflush(stdout);
 	print_info(philo, FORK);
@@ -27,8 +27,8 @@ static void	eat_lock(t_philo *philo)
 			pthread_mutex_lock(&philo->all_philo->write);
 	}
 	philo->eating = 0;
-	sem_post();
-	sem_post();
+	pthread_mutex_unlock(&(philo->all_philo->forks[philo->right_fork]));
+	pthread_mutex_unlock(&(philo->all_philo->forks[philo->left_fork]));
 }
 
 void	*monitor_dead_thread(void *arg_all)
@@ -44,7 +44,7 @@ void	*monitor_dead_thread(void *arg_all)
 		{
 			return (NULL);
 		}
-		custom_sleep(get_time(0) + 1000);
+		usleep(100);
 	}
 }
 
@@ -61,11 +61,11 @@ static void	*monitor_thread(void *arg_philo)
 			philo->all_philo->smbd_dead = 1;
 			pthread_mutex_lock(&philo->all_philo->write);
 			printf("%llums %u died\n",
-				get_time(philo->all_philo->begin), philo->num_id);
+				get_time(philo->all_philo->begin), philo->num_id + 1);
 			fflush(stdout);
 			return (NULL);
 		}
-		custom_sleep(get_time(0) + 1000);
+		usleep(100);
 	}
 }
 
