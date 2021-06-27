@@ -77,8 +77,6 @@ void	*philo_thread(void *arg_philo)
 	philo = (t_philo *)arg_philo;
 	pthread_create(&monitor, NULL, monitor_thread, arg_philo);
 	pthread_detach(monitor);
-	if (philo->num_id % 2 == 1)
-		usleep(50);
 	while (1)
 	{
 		eat_lock(philo);

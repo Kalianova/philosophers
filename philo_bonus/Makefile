@@ -1,6 +1,6 @@
 NAME = philo_bonus
 CFLAGS = -Wall -Werror -Wextra
-SRC = 
+SRC = mutex_thread.c utils.c main.c
 
 OBJ = $(SRC:.c=.o)
 OBJ_BONUS = $(SRC_BONUS:.c=.o)
