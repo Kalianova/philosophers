@@ -8,17 +8,15 @@ static void	custom_sleep(unsigned long long wake)
 
 static void	eat_lock(t_philo *philo)
 {
-	pthread_mutex_lock(&(philo->all_philo->take_fork));
 	pthread_mutex_lock(&(philo->all_philo->forks[philo->right_fork]));
 	pthread_mutex_lock(&(philo->all_philo->forks[philo->left_fork]));
-	pthread_mutex_unlock(&(philo->all_philo->take_fork));
 	fflush(stdout);
 	print_info(philo, FORK);
 	print_info(philo, FORK);
 	print_info(philo, EAT);
 	philo->eating = 1;
-	custom_sleep(get_time(0) + philo->info_philo->time_eat);
 	philo->last_eat = get_time(0);
+	custom_sleep(get_time(0) + philo->info_philo->time_eat);
 	philo->count_eat++;
 	if (philo->count_eat == philo->info_philo->num_philo_eat)
 	{
@@ -75,6 +73,8 @@ void	*philo_thread(void *arg_philo)
 	t_philo		*philo;
 
 	philo = (t_philo *)arg_philo;
+	if (philo->num_id % 2 == 1)
+		usleep(50);
 	pthread_create(&monitor, NULL, monitor_thread, arg_philo);
 	pthread_detach(monitor);
 	while (1)

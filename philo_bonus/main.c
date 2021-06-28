@@ -33,7 +33,7 @@ static int	init_num_philo_eat(t_info_philo *info, t_all_philo *res)
 	i = -1;
 	if (info->num_philo_eat > 0)
 	{
-		while (++i < info->num_philo_eat + 1)
+		while (++i < info->num_philo_eat - 1)
 			sem_wait(res->full_eat);
 		pid = fork();
 		if (pid < 0)
@@ -113,7 +113,7 @@ int	main(int argc, char **argv)
 	all.check_dead = sem_open("/check_dead", O_CREAT, 0644, 1);
 	if (info.num_philo_eat > 0)
 		all.full_eat = sem_open("/full_eat", O_CREAT, 0644,
-				info.num_philo_eat + 1);
+				info.num_philo_eat);
 	if (!init_all(&info, &all) || all.forks == SEM_FAILED
 		|| all.take_fork == SEM_FAILED || all.check_dead == SEM_FAILED
 		|| all.full_eat == SEM_FAILED || all.write == SEM_FAILED)

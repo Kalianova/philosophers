@@ -42,7 +42,6 @@ typedef struct s_all_philo
 	unsigned long long	begin;
 	pthread_mutex_t		*forks;
 	pthread_mutex_t		write;
-	pthread_mutex_t		take_fork;
 	pthread_t			check_dead;
 	t_philo				*philos;
 }				t_all_philo;

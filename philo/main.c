@@ -30,8 +30,7 @@ static int	init_begin_all(t_info_philo *info, t_all_philo *res)
 		return (0);
 	res->begin = get_time(0);
 	res->count_full_eat = 0;
-	if (pthread_mutex_init(&res->take_fork, NULL) != 0
-		|| pthread_mutex_init(&res->write, NULL) != 0)
+	if (pthread_mutex_init(&res->write, NULL) != 0)
 		return (0);
 	res->smbd_dead = 0;
 	return (1);
@@ -102,7 +101,6 @@ int	main(int argc, char **argv)
 		i++;
 	}
 	pthread_mutex_destroy(&all.write);
-	pthread_mutex_destroy(&all.take_fork);
 	free (all.philos);
 	free (all.forks);
 	return (0);

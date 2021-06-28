@@ -32,8 +32,8 @@ static void	eat_lock(t_philo *philo)
 	print_info(philo, FORK);
 	print_info(philo, EAT);
 	philo->eating = 1;
-	custom_sleep(get_time(0) + philo->info_philo->time_eat);
 	philo->last_eat = get_time(0);
+	custom_sleep(get_time(0) + philo->info_philo->time_eat);
 	philo->count_eat++;
 	if (philo->count_eat == philo->info_philo->num_philo_eat)
 		sem_post(philo->all_philo->full_eat);
@@ -47,7 +47,7 @@ void	*monitor_dead_thread(t_all_philo *all_philo, int count_philo)
 	int			i;
 
 	i = 0;
-	while (i < count_philo + 1)
+	while (i < count_philo - 1)
 	{
 		sem_wait(all_philo->full_eat);
 		i++;
