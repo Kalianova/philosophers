@@ -8,6 +8,12 @@ unsigned long long	get_time(unsigned long long last_time)
 	return (time.tv_usec / 1000 + time.tv_sec * 1000 - last_time);
 }
 
+void	custom_sleep(unsigned long long wake)
+{
+	while (get_time(0) < wake)
+		usleep(50);
+}
+
 int	ft_atoi(const char *nptr)
 {
 	int			i;

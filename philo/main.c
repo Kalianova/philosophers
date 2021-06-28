@@ -21,18 +21,29 @@ void	print_info(t_philo *philo, int type)
 	pthread_mutex_unlock(&philo->all_philo->write);
 }
 
-static void	init_all(t_info_philo *info, t_all_philo *res)
+static int	init_begin_all(t_info_philo *info, t_all_philo *res)
+{
+	res->philos = (t_philo *)malloc(sizeof(t_philo) * info->num_philo);
+	res->forks = (pthread_mutex_t *)
+		malloc(sizeof(pthread_mutex_t) * info->num_philo);
+	if (res->forks == NULL || res->philos == NULL)
+		return (0);
+	res->begin = get_time(0);
+	res->count_full_eat = 0;
+	if (pthread_mutex_init(&res->take_fork, NULL) != 0
+		|| pthread_mutex_init(&res->write, NULL) != 0)
+		return (0);
+	res->smbd_dead = 0;
+	return (1);
+}
+
+static int	init_all(t_info_philo *info, t_all_philo *res)
 {
 	int			i;
 
 	i = -1;
-	res->philos = (t_philo *)malloc(sizeof(t_philo) * info->num_philo);
-	res->forks = (pthread_mutex_t *)
-		malloc(sizeof(pthread_mutex_t) * info->num_philo);
-	res->begin = get_time(0);
-	res->count_full_eat = 0;
-	pthread_mutex_init(&res->take_fork, NULL);
-	pthread_mutex_init(&res->write, NULL);
+	if (!init_begin_all(info, res))
+		return (0);
 	while (++i < info->num_philo)
 	{
 		res->philos[i].num_id = i;
@@ -43,12 +54,15 @@ static void	init_all(t_info_philo *info, t_all_philo *res)
 		res->philos[i].info_philo = info;
 		res->philos[i].count_eat = 0;
 		res->philos[i].last_eat = get_time(0);
-		pthread_mutex_init(&res->forks[i], NULL);
-		pthread_create(&res->philos[i].thread,
-			NULL, philo_thread, &res->philos[i]);
+		if (pthread_mutex_init(&res->forks[i], NULL) != 0
+			|| pthread_create(&res->philos[i].thread,
+				NULL, philo_thread, &res->philos[i]) != 0)
+			return (0);
 		pthread_detach(res->philos[i].thread);
 	}
-	pthread_create(&res->check_dead, NULL, monitor_dead_thread, res);
+	if (pthread_create(&res->check_dead, NULL, monitor_dead_thread, res) != 0)
+		return (0);
+	return (1);
 }
 
 static t_info_philo	init_info(int argc, char **argv)
@@ -70,15 +84,15 @@ int	main(int argc, char **argv)
 	t_info_philo	info;
 	t_all_philo		all;
 	int				i;
-// ОБРАБОТКА ОШИБОК МЬЮТЕКСОВ
+
 	if (argc < 5 || argc > 6)
 		return (print_error("Wrong number of parameters"));
 	info = init_info(argc, argv);
 	if (info.num_philo <= 0 || info.num_philo_eat == 0 || info.time_die < 0
 		|| info.time_sleep < 0 || info.time_die < 0)
 		return (print_error("Invalid parameter"));
-	init_all(&info, &all);
-	all.smbd_dead = 0;
+	if (!init_all(&info, &all))
+		return (print_error("Error in threads or mutexes"));
 	pthread_join(all.check_dead, NULL);
 	pthread_detach(all.check_dead);
 	i = 0;

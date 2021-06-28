@@ -1,9 +1,24 @@
 #include "philo.h"
 
-static void	custom_sleep(unsigned long long wake)
+static void	print_info(t_philo *philo, int type)
 {
-	while (get_time(0) < wake)
-		usleep(50);
+	unsigned int	timestamp_in_ms;
+	unsigned int	philo_number;
+
+	timestamp_in_ms = get_time(philo->all_philo->begin);
+	philo_number = philo->num_id;
+	sem_wait(philo->all_philo->write);
+	printf("%ums %u ", timestamp_in_ms, philo_number + 1);
+	if (type == 1)
+		printf("has taken a fork\n");
+	if (type == 2)
+		printf("is eating\n");
+	if (type == 3)
+		printf("is sleeping\n");
+	if (type == 4)
+		printf("is thinking\n");
+	fflush(stdout);
+	sem_post(philo->all_philo->write);
 }
 
 static void	eat_lock(t_philo *philo)
@@ -21,38 +36,25 @@ static void	eat_lock(t_philo *philo)
 	philo->last_eat = get_time(0);
 	philo->count_eat++;
 	if (philo->count_eat == philo->info_philo->num_philo_eat)
-	{
-		philo->all_philo->count_full_eat++;
-		if (philo->all_philo->count_full_eat == philo->info_philo->num_philo)
-			sem_wait(philo->all_philo->write);
-	}
+		sem_post(philo->all_philo->full_eat);
 	philo->eating = 0;
 	sem_post(philo->all_philo->forks);
 	sem_post(philo->all_philo->forks);
 }
 
-void	*monitor_dead_thread(void *arg_all)
+void	*monitor_dead_thread(t_all_philo *all_philo, int count_philo)
 {
-	t_all_philo	*all_philo;
-	int i;
+	int			i;
 
 	i = 0;
-	all_philo = (t_all_philo *)arg_all;
-	while (1)
+	while (i < count_philo + 1)
 	{
-		if (all_philo->count_full_eat
-			== all_philo->philos[0].info_philo->num_philo
-			|| all_philo->smbd_dead)
-		{
-			while (i < all_philo->philos[0].info_philo->num_philo)
-			{
-				kill(all_philo->philos[i].pid, 15);
-				i++;
-			}
-			return (NULL);
-		}
-		custom_sleep(get_time(0) + 1000);
+		sem_wait(all_philo->full_eat);
+		i++;
 	}
+	sem_wait(all_philo->write);
+	sem_post(all_philo->check_dead);
+	return (NULL);
 }
 
 static void	*monitor_thread(void *arg_philo)
@@ -63,26 +65,25 @@ static void	*monitor_thread(void *arg_philo)
 	while (1)
 	{
 		if (!philo->eating && (int)(get_time(0) - philo->last_eat)
-			> philo->info_philo->time_die)
+			> philo->info_philo->time_die && !philo->died)
 		{
-			philo->all_philo->smbd_dead = 1;
+			philo->died = 1;
 			sem_wait(philo->all_philo->write);
 			printf("%llums %u died\n",
-				get_time(philo->all_philo->begin), philo->num_id);
+				get_time(philo->all_philo->begin), philo->num_id + 1);
 			fflush(stdout);
+			sem_post(philo->all_philo->check_dead);
 			return (NULL);
 		}
-		custom_sleep(get_time(0) + 1000);
+		usleep(10);
 	}
 }
 
-void	*philo_thread(void *arg_philo)
+void	*philo_thread(t_philo *philo)
 {
 	pthread_t	monitor;
-	t_philo		*philo;
 
-	philo = (t_philo *)arg_philo;
-	pthread_create(&monitor, NULL, monitor_thread, arg_philo);
+	pthread_create(&monitor, NULL, monitor_thread, philo);
 	pthread_detach(monitor);
 	while (1)
 	{

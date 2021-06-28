@@ -1,5 +1,5 @@
 NAME = philo_bonus
-CFLAGS = -Wall -Werror -Wextra
+CFLAGS =  -Wall -Werror -Wextra
 SRC = mutex_thread.c utils.c main.c
 
 OBJ = $(SRC:.c=.o)

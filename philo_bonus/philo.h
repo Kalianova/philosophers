@@ -17,6 +17,7 @@ struct	s_info_philo;
 
 typedef struct s_philo
 {
+	int						died;
 	int						eating;
 	int						num_id;
 	int						count_eat;
@@ -37,8 +38,7 @@ typedef struct s_info_philo
 
 typedef struct s_all_philo
 {
-	int					smbd_dead;
-	int					count_full_eat;
+	sem_t				*full_eat;
 	unsigned long long	begin;
 	sem_t				*forks;
 	sem_t				*write;
@@ -50,8 +50,9 @@ typedef struct s_all_philo
 unsigned long long	get_time(unsigned long long last_time);
 int					ft_atoi(const char *nptr);
 int					print_error(char *msg);
-void				*philo_thread(void *arg_philo);
-void				*monitor_dead_thread(void *arg_all);
-void				print_info(t_philo *philo, int type);
+void				*philo_thread(t_philo *philo);
+void				*monitor_dead_thread(t_all_philo *all_philo,
+						int count_philo);
+void				custom_sleep(unsigned long long wake);
 
 #endif
